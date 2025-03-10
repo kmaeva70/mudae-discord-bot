@@ -9,14 +9,13 @@ const client = new Client({
     intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.MessageContent]
 });
 
-mongoose.connect(process.env.MONGO_URI, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-});
+mongoose.connect(process.env.MONGO_URI)
+    .then(() => console.log("Connected to MongoDB!"))
+    .catch(err => console.error("MongoDB connection error:", err));
 
 const UserSchema = new mongoose.Schema({
     discordId: String,
-    shipLists: [{ name: String, ships: Object }],
+    shipLists: [{ name: String, ships: mongoose.Schema.Types.Mixed }],
 });
 const User = mongoose.model('User', UserSchema);
 
@@ -46,13 +45,18 @@ client.on('messageCreate', async (message) => {
             return message.channel.send('Please provide a character name.');
         }
         
-        const response = await axios.get(`http://localhost:5000/ships/${character}`);
-        const ships = response.data;
-        
-        if (Object.keys(ships).length > 0) {
-            await message.channel.send(`Ships for **${character}**:\n${JSON.stringify(ships, null, 2)}`);
-        } else {
-            await message.channel.send(`No ships found for **${character}**.`);
+        try {
+            const response = await axios.get(`http://localhost:5000/ships/${character}`);
+            const ships = response.data;
+            
+            if (Object.keys(ships).length > 0) {
+                await message.channel.send(`Ships for **${character}**:\n${JSON.stringify(ships, null, 2)}`);
+            } else {
+                await message.channel.send(`No ships found for **${character}**.`);
+            }
+        } catch (error) {
+            console.error(`Error fetching ships for ${character}:`, error);
+            await message.channel.send('Error retrieving ship data. Please try again later.');
         }
     }
     
@@ -102,4 +106,5 @@ const syncWithDatabase = async (discordId, characters, ships) => {
 };
 
 client.login(process.env.DISCORD_BOT_TOKEN);
+
 
