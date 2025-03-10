@@ -46,7 +46,7 @@ client.on('messageCreate', async (message) => {
         }
         
         try {
-            const response = await axios.get(`http://localhost:5000/ships/${character}`);
+            const response = await axios.get(`${process.env.BACKEND_URL}/ships/${character}`);
             const ships = response.data;
             
             if (Object.keys(ships).length > 0) {
@@ -63,7 +63,7 @@ client.on('messageCreate', async (message) => {
     if (message.content.startsWith('!mudae')) {
         await message.channel.send('Generating your Mudae ship command...');
         try {
-            const response = await axios.get("http://localhost:5000/mudae-command", {
+            const response = await axios.get(`${process.env.BACKEND_URL}/mudae-command`, {
                 headers: { Authorization: process.env.BOT_AUTH_TOKEN }
             });
             await message.channel.send(`Your Mudae ship command:\n\`${response.data.mudaeCommand}\``);
@@ -82,7 +82,7 @@ const fetchShipsFromAPI = async (characters) => {
     const shipResults = [];
     for (const char of characters) {
         try {
-            const response = await axios.get(`http://localhost:5000/ships/${char}`);
+            const response = await axios.get(`${process.env.BACKEND_URL}/ships/${char}`);
             shipResults.push(`${char}: ${JSON.stringify(response.data)}`);
         } catch (error) {
             console.error(`Error fetching ships for ${char}:`, error);
